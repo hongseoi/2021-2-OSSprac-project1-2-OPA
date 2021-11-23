@@ -40,7 +40,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.PROJ }}
+          password: ${{ secrets.GHCR_TOKEN }}
       - name: Build and push
         id: docker_build
         uses: docker/build-push-action@v2
@@ -59,7 +59,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.PROJ }}
+          password: ${{ secrets.GHCR_TOKEN }}
       - name: Docker run
         run: |
           docker stop ${{ env.NAME }} && docker rmi ${{ env.DOCKER_IMAGE }}:latest
