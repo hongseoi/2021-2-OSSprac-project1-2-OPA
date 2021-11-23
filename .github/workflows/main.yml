@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: CI
+name: Docker CI/CD
 
 # Controls when the workflow will run
 on:
@@ -13,24 +13,47 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+env: 
+  DOCKER_IMAGE: ghcr.io/${{ github.actor }}/ossp_flaskapp
+  VERSION: ${{ github.sha }}
+  NAME: ossprac_container
+
 jobs:
-  # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
+    name: Build
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
-
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
-
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
+      - name: Check out source code
+        uses: actions/checkout@v2
+      - name: Set up docker buildx
+        id: buildx
+      - name: Cache docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ env.VERSION }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+      - name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          push: true
+          tags: ${{ env.DOCKER_IMAGE }}:latest
+          
+  deploy:
+    needs: build
+    name: Deploy
+    runs-on: [self-hosted, label-go]
+    steps:
+      - name: Login to ghcr
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+      - name: Docker run
         run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+          docker stop ${{ env.NAME }} && docker rmi ${{ env.DOCKER_IMAGE }}:latest
+          docker run -d -p 80:80 --name ossprac_container --restart always ${{ env.DOCKER_IMAGE }}:latest
