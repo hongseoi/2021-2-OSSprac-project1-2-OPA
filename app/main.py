@@ -6,6 +6,16 @@ app = Flask(__name__)
 def student():
    return render_template('main.html')
 
+@app.route('/detail', methods = ['POST', 'GET'])
+   def detail():
+      if request.method == 'POST':
+         detail = dict()
+         detail['Name'] = request.form.get('Name')
+         detail['StudentNumber'] = request.form.get('StudentNumber')
+         detail['Gender'] = request.form.get('Gender')
+         detail['Major'] = request.form.get('Major')
+         return render_template('detail.html')
+
 @app.route('/result', methods = ['POST', 'GET'])
 def result():
    if request.method == 'POST':
