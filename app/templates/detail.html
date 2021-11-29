@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Detail</title>
+</head>
+<body>
+    <form action="/result" method="POST">
+        <table border=1>
+            {% for key, value in result.items() %}
+                <tr>
+                    <th> {{ key }} </th>
+                    <td><input type="text" name={{ key }} value={{ value }} readonly /></td>
+                </tr>
+            {% endfor %}
+        </table>
+        <input type="button" value="MODIFY" onclick="history.back();"/>
+        <input type="submit" value="SUBMIT"/>
+    </form>
+</body>
+</html>
